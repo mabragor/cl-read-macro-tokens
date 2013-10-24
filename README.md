@@ -57,6 +57,10 @@ TODO:
   - Support all major implementations
     - (done) SBCL
     - (done) CMUCL
-    - ECL
-    - CLISP
     - (done) Clozure
+    - ECL - reader written in C, hard to rehack
+    - CLISP - reader written in C, hard to rehack
+
+All in all, in order to do ECL and CLISP, it is easier to write a separately packaged lisp-reader,
+e.g. based on SBCL's one and then use e.g. READER-INTERCEPT system to substitute ECL's and CLISP's
+C-ish readers with lispy one.
