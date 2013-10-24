@@ -13,7 +13,8 @@
   :pathname "src/"
   :components (#+sbcl (:file "sbcl-backend")
                #+cmucl (:file "cmucl-backend")
-               #-(or sbcl cmucl)(:file "not-implemented")
+               #+ccl (:file "ccl-backend")
+               #-(or sbcl cmucl ccl)(:file "not-implemented")
                (:file "package")
                (:file "cl-read-macro-tokens")))
 

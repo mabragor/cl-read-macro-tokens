@@ -59,4 +59,4 @@ TODO:
     - (done) CMUCL
     - ECL
     - CLISP
-    - Clozure
+    - (done) Clozure
