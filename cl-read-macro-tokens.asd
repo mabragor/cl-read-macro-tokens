@@ -10,6 +10,7 @@
   :description "Allows reader macros to be attached to tokens, not only chars"
   :author "Alexander Popolitov <popolit@gmail.com>"
   :license "GPL"
+  :pathname "src/"
   :components (#+sbcl (:file "sbcl-backend")
                #+cmucl (:file "cmucl-backend")
                #-(or sbcl cmucl)(:file "not-implemented")
@@ -21,6 +22,7 @@
   :licence "GPL"
   :serial t
   :depends-on (:cl-read-macro-tokens :fiveam)
+  :pathname "src/"
   :components ((:file "package-tests")
                (:file "tests")))
 
