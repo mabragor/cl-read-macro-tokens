@@ -5,6 +5,9 @@ Why should things, that affect Lisp-reader, be limited to special characters (ca
 
 This package adds possibility to define 'macro-tokens'.
 
+Macro-tokens
+------------
+
 Macro-token is any symbol, which happens to be in CAR-position of a list.
 
 Example:
@@ -46,14 +49,85 @@ CL-USER> '(foo 1 (cl-read-macro-tokens:with-no-read-macro-tokens1 (foo 2) 3))
 The former one expands into progn-form, while the other into ordinary list-form.
 Hence, former is used when defining code, and latter when defining data.
 
+Read-macros revisited
+---------------------
+
+What if you had a macro, that at the same time would be able to modify the lisp-reader in some way?
+I.e., what if you had a macro, that is at the same time read-macro token?
+
+DEFMACRO!! macro lets you define such objects.
+
+```lisp
+CL-USER> (defmacro!! nihilling-vectors (&body body)
+           (let ((*readtable* (copy-readtable))
+                 (stash-function (get-dispatch-macro-character #\# #\()))
+             (set-dispatch-macro-character #\# #\(
+                                           (lambda (stream char subchar)
+                                             (funcall stash-function stream char subchar)
+                                             nil))
+             (call-next-method))
+           "Vectors inside the body of this macro are read in as NILs"
+           `(progn ,@body))
+CL-USER> (nihilling-vectors '(#(1 2 3)))
+(NIL)
+```
+
+There is an important subtlety with read-macro-tokens. Namely, if since they affect
+lisp-reader, which knows nothing about macroexpansions, if I naively define a macro,
+whose expansions contains read-macro-tokens, things will not work as expected.
+
+```lisp
+CL-USER> (defmacro mask-nihilling-vectors (&body body)
+           `(nihilling-vectors ,@body))
+CL-USER> (mask-nihilling-vectors '(#(1 2 3)))
+'(#(1 2 3))
+```
+
+The reader modification behaviour is lost.
+
+However, DEFMACRO!! takes special case to scan its body and inherit all reader-macro
+features of tokens, found there. So
+
+```lisp
+CL-USER> (defmacro!! nomask-nihilling-vectors (&body body)
+           `(nihilling-vectors ,@body))
+CL-USER> (nomask-nihilling-vectors '(#(1 2 3)))
+'(NIL)
+```
+
+If there are more than one distinct token in the macroexpansion, the new macro inherits
+from them all. In fact, it uses CLOS under the hood, do to all this stuff.
+
+Beware! Gotchas!
+--------------
+
+  - now only very simple mechanism of analyzing the body of a macro is implemented.
+    Namely, the body is FLATTENed and all the symbols are tested on READ-MACRO-TOKEN properties,
+    not only those in CAR-positions.
+    So, if you have read-macro-token FOO defined, and in macroexpansion of
+    MACRO!! BAR there appears, say, variable FOO, then BAR mysteriously inherits
+    read-macro-token properties of FOO.
+    I know this is a bug, but a correct version requires codewalking without macroexpansion of
+    the body, with collecting symbols in car-positions.
+    That is to say, patches that cure this are very welcome.
+  - For some mysterious reason things do not work right, if you use
+    in DEFMACRO!!'s body macro, which were DEFMACRO!!-ed in the same file.
+    This is why in tests to this system macro are contained in two separate files - macro-tests.lisp
+    and macro2-tests.lisp
+    The macro in the second file expand into macro, defined in the first.
+    
+
 TODO:
 -----
 
   - Make DEFINE-READ-MACRO actually work.
-  - Make a convenience wrapper around DEFMACRO, which allows to define macros,
+  - (done) Make a convenience wrapper around DEFMACRO, which allows to define macros,
     which are at the same time read-macro-tokens.
     They should scan their body, and if they contain other such macro-read-macro-tokens,
     they should inherit read-macro-token function from them.
+    - Rewrite things, so that you can add read-macro functionality to any DEFMACRO-like macro.
+    - When DEFMACRO!! scans for parent read-macro, it should only consider symbols in CAR-position, not
+      all of them
   - Support all major implementations
     - (done) SBCL
     - (done) CMUCL

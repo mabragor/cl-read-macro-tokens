@@ -11,20 +11,24 @@
   :author "Alexander Popolitov <popolit@gmail.com>"
   :license "GPL"
   :pathname "src/"
+  :depends-on (#:defmacro-enhance)
   :components (#+sbcl (:file "sbcl-backend")
                #+cmucl (:file "cmucl-backend")
                #+ccl (:file "ccl-backend")
                #-(or sbcl cmucl ccl)(:file "not-implemented")
                (:file "package")
-               (:file "cl-read-macro-tokens")))
+               (:file "cl-read-macro-tokens")
+               (:file "read-macro")))
 
 (defsystem :cl-read-macro-tokens-tests
   :description "Tests for CL-READ-MACRO-TOKENS."
   :licence "GPL"
   :serial t
-  :depends-on (:cl-read-macro-tokens :fiveam)
+  :depends-on (:cl-read-macro-tokens :fiveam :iterate)
   :pathname "src/"
   :components ((:file "package-tests")
+               (:file "macro-tests")
+               (:file "macro2-tests")
                (:file "tests")))
 
 (defmethod perform ((op test-op) (sys (eql (find-system :cl-read-macro-tokens))))

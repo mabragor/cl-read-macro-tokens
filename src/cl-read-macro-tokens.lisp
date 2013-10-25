@@ -18,12 +18,14 @@
   (setf (gethash 'with-no-read-macro-tokens *read-macro-tokens*)
         #'%with-no-read-macro-tokens)
   (setf (gethash 'with-no-read-macro-tokens1 *read-macro-tokens*)
-        #'%with-no-read-macro-tokens1))
+        #'%with-no-read-macro-tokens1)
+  (values))
   
 
 (defun %disable-read-macro-tokens (&optional (readtable *readtable*))
   (set-macro-character #\( #'read-list-old nil readtable)
-  (undefine-read-macro with-no-read-macro-tokens))
+  (undefine-read-macro with-no-read-macro-tokens)
+  (values))
 
 (defmacro enable-read-macro-tokens (&optional (readtable '*readtable*))
   `(eval-when (:compile-toplevel :load-toplevel :execute)
