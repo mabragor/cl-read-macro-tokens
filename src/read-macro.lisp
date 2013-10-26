@@ -10,7 +10,6 @@
 (defgeneric read-handler (obj stream token)
   (:documentation "Main method to define behaviour of tautological macro-tokens.")
   (:method ((obj tautological-read-macro-token) stream token)
-    (format t "Im in tautological core.~%")
     `(,(slot-value obj 'name) ,@(read-list-old stream token))))
 
 (defun read-macro-token-p (symb)
@@ -48,4 +47,27 @@
            ,@(if doc `(,doc))
            ,@decls
            ,@body)))))
+
+(defmacro! read-macrolet (definitions &body body)
+  (if (not definitions)
+      `(progn ,@body)
+      (destructuring-bind (name fun) (car definitions)
+        `(multiple-value-bind (,g!-it  ,g!-got) (gethash ',name *read-macro-tokens*)
+           (unwind-protect (progn (setf (gethash ',name *read-macro-tokens*) ,fun)
+                                  (read-macrolet ,(cdr definitions) ,@body))
+             (if ,g!-got
+                 (setf (gethash ',name *read-macro-tokens*) ,g!-it)
+                 (remhash ',name *read-macro-tokens*)))))))
+
+(defmacro! with-macro-character ((char fun) &body body)
+  `(let ((,g!-it (get-macro-character ,char)))
+     (unwind-protect (progn (set-macro-character ,char ,fun)
+                            ,@body)
+       (set-macro-character ,char ,g!-it))))
+
+(defmacro! with-dispatch-macro-character ((char subchar fun) &body body)
+  `(let ((,g!-it (get-dispatch-macro-character ,char ,subchar)))
+     (unwind-protect (progn (set-dispatch-macro-character ,char ,subchar ,fun)
+                            ,@body)
+       (set-dispatch-macro-character ,char ,subchar ,g!-it))))
 

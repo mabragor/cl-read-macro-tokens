@@ -98,8 +98,41 @@ CL-USER> (nomask-nihilling-vectors '(#(1 2 3)))
 If there are more than one distinct token in the macroexpansion, the new macro inherits
 from them all. In fact, it uses CLOS under the hood, do to all this stuff.
 
+READ-MACROLET, WITH-MACRO-CHARACTER and WITH-DISPATCH-MACRO-CHARACTER
+----------------------------------------------------------------------
+
+OK, since we now may modify reader's behaviour in more ways, let's add few more conveniencies.
+
+READ-MACROLET lets you define read-macro-tokens, that are valid only inside body of
+some other read-macro-token
+
+```lisp
+CL-USER> (defmacro!! my-reader-context (&body body)
+           ;; Define the behaviour with respect to the reader
+           (read-macrolet ((reader-context #'reader-context-handler)
+                           (reader-context-2 #'reader-context-handler-2))
+             (call-next-method))
+           ;; Define, how read-in macro would be expanded
+           `(progn ,@body)
+```
+
+Usually these macro-token contexts serve to temporarily change meaning of macro-characters.
+For this WITH-MACRO-CHARACTER and WITH-DISPATCH-MACRO-CHARACTER become handy.
+
+```lisp
+;; Somewhere inside READ-MACROLET
+(reader-context (lambda (stream token)
+                  (with-macro-character (#\[ #'some-clever-function)
+                    (with-macro-character (#\# #\. #'some-even-more-clever-function)
+                      ;; So, inside READER-CONTEXTs body meaning of '[' and '#.' would be different from
+                      ;; the outside meaning.
+                      `(progn ,@(read-list-old stream token))))))
+```
+
+See NIHILLING-CHARS-AND-STRINGS in macro-tests.lisp for a full example using all these macro.
+
 Beware! Gotchas!
---------------
+----------------
 
   - now only very simple mechanism of analyzing the body of a macro is implemented.
     Namely, the body is FLATTENed and all the symbols are tested on READ-MACRO-TOKEN properties,

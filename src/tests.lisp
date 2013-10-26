@@ -47,6 +47,11 @@
   (is (equal '(nil nil)
              (nihilling-arrays-and-read-eval (list #(1 2 3) #.(+ 1 2 3))))))
 
+(test simple-read-macrolet
+  (is (equal '(nil nil #\a "asdf" nil nil)
+             (nihilling-chars-and-strings (list #\a "asdf"
+                                                (literal-char #\a) (literal-string "asdf")
+                                                (literal-string #\a) (literal-char "asdf"))))))
              
 (disable-read-macro-tokens)
 
