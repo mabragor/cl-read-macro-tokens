@@ -43,7 +43,7 @@
                (lambda (stream token)
                  (read-handler (gethash ',name *read-macro-tokens-instances*)
                                stream token)))
-         (defmacro ,name ,args
+         (defmacro! ,name ,args
            ,@(if doc `(,doc))
            ,@decls
            ,@body)))))

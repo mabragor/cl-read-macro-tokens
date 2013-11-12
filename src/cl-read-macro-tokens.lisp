@@ -5,7 +5,7 @@
 (defmacro define-read-macro (name &body body)
   (let ((fname (gensym (string name))))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (defun ,fname (stream token)
+       (defun ,fname (,(intern "STREAM") ,(intern "TOKEN"))
          ,@body)
        (setf (gethash ',name *read-macro-tokens*) #',fname))))
 
