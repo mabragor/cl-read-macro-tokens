@@ -3,7 +3,7 @@
 
 (defparameter *read-macro-tokens* (make-hash-table :test #'eq))
 
-(defun read-list-new (stream &optional nodots (termch #\)))
+(defun pre-read-list-new (stream &optional nodots (termch #\)))
   (let* ((dot-ok (cons nil nil))
          (head (cons nil nil))
          (tail head)
@@ -20,7 +20,7 @@
             (signal-reader-error stream "Dot context error."))
         (let ((custom-reader (gethash firstform *read-macro-tokens*)))
                 (if custom-reader
-                    (return-from read-list-new (funcall custom-reader stream firstform))))
+                    (return-from pre-read-list-new (funcall custom-reader stream firstform))))
         (rplacd tail (setq tail (cons firstform nil)))
         (loop
           (multiple-value-bind (nextform nextform-p nextform-source-note)
@@ -37,11 +37,16 @@
                            (progn (rplacd tail lastform)
                                   (not (nth-value 1 (%read-list-expression stream nil termch))))))
                     (return)
-                    (signal-reader-error stream "Dot context error."))
+                    (signal-reader-error stream "Dot context error1."))
               (rplacd tail (setq tail (cons nextform nil))))))))
     (values (cdr head) source-note-list)))
 
+(defun read-list-new (stream char)
+  (declare (ignore char))
+  (pre-read-list-new stream nil #\)))
+
 (defun read-list-old (stream char)
-  (read-list stream char))
+  (declare (ignore char))
+  (read-list stream nil #\)))
 
 (export '(read-list-new read-list-old *read-macro-tokens*))

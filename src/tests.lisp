@@ -62,4 +62,6 @@
              (with-no-read-macro-tokens
                  '(foo 1 2 3)))))
 
-
+;; test to catch dot-context failure in Clozure
+(test simple-dot-operator
+  (is (equal (cons 1 2) '(1 . 2))))
