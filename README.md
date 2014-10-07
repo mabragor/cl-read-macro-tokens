@@ -85,7 +85,7 @@ CL-USER> (mask-nihilling-vectors '(#(1 2 3)))
 
 The reader modification behaviour is lost.
 
-However, DEFMACRO!! takes special case to scan its body and inherit all reader-macro
+However, DEFMACRO!! takes special care to scan its body and inherit all reader-macro
 features of tokens, found there. So
 
 ```lisp
