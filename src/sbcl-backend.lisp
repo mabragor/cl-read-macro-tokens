@@ -5,9 +5,18 @@
   (:use #:cl))
 (in-package #:cl-read-macro-tokens-patch)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun new-style-fun-type-p (lst)
+    (and (consp lst)
+	 (equal 4 (length lst))
+	 (destructuring-bind (val v1 v2 opt) lst
+	   (and (equal val 'values)
+		(eq v2 't)
+		(eq opt '&optional))))))
+
 (eval-when (:compile-toplevel :execute)
   (let ((it (caddr (sb-impl::%fun-type #'sb-impl::read-maybe-nothing))))
-    (cond ((equal '(values t t &optional) it)
+    (cond ((new-style-fun-type-p it)
 	   (pushnew 'new-style-readlist *features*))
 	  ((equal '* it) nil)
 	  (t (pushnew 'not-supported-sbcl *features*)))))
