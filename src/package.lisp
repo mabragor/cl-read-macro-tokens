@@ -12,6 +12,7 @@
            #:read-list-new
            #:read-list-old
            #:*read-macro-tokens*
-           #:defmacro!! #:read-macrolet #:with-macro-character #:with-dispatch-macro-character))
+           #:defmacro!! #:read-macrolet #:with-macro-character #:with-dispatch-macro-character
+	   #:set-macro-token-reader))
 
 

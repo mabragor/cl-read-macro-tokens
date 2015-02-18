@@ -2,6 +2,7 @@ cl-read-macro-tokens
 ====================
 
 Why should things, that affect Lisp-reader, be limited to special characters (called macro-characters)?
+I want arbitrary symbols to be able to alter reader behavior!
 
 This package adds possibility to define 'macro-tokens'.
 
@@ -130,6 +131,33 @@ For this WITH-MACRO-CHARACTER and WITH-DISPATCH-MACRO-CHARACTER become handy.
 ```
 
 See NIHILLING-CHARS-AND-STRINGS in macro-tests.lisp for a full example using all these macro.
+
+
+SET-MACRO-TOKEN-READER
+----------------------
+
+If you want something more subtle than establishing new reader rules for all subforms of a given
+form, then DEFMACRO!! won't do.
+Or, if you want to define something with custom reader properties, which is not a macro from
+codewalker point of view (e.g., a function)
+
+For this you may use SET-MACRO-TOKEN-READER (example is taken from ESRAP-LIQUID)
+```lisp
+(flet ((the-handler (stream token)
+  (let ((expression (with-esrap-reader-context
+                      (read stream t nil t))))
+    `(,cl-read-macro-tokens::the-token ,expression ,@(read-list-old stream token)))))
+  (set-macro-token-reader parse #'the-handler))
+
+CL-USER> (parse "a" "a")
+(PARSE (descend-with-rule 'string "a") "a")
+```
+
+As you can see, first form of the subforms is read using special reader rules
+(established by ESRAP-READER-CONTEXT macro), while all the others are read as usual.
+
+The other thing to note is THE-TOKEN symbol. It is a SYMBOL-MACRO, which expands to the
+name of the token the handler is used for.
 
 Beware! Gotchas!
 ----------------

@@ -10,6 +10,7 @@
   :description "Allows reader macros to be attached to tokens, not only chars"
   :author "Alexander Popolitov <popolit@gmail.com>"
   :license "GPL"
+  :version "0.3"
   :pathname "src/"
   :depends-on (#:defmacro-enhance)
   :components (#+sbcl (:file "sbcl-backend")

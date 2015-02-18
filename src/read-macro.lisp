@@ -72,3 +72,37 @@
                             ,@body)
        (set-dispatch-macro-character ,char ,subchar ,g!-it))))
 
+(defparameter the-token-instance nil)
+(define-symbol-macro the-token (slot-value the-token-instance 'name))
+
+(defun random-string ()
+  (coerce (let ((res nil))
+	    (dotimes (i 8)
+	      (push (code-char (+ 65 (random 26))) res))
+	    res)
+	  'string))
+
+(defun random-new-class-name ()
+  (loop (let ((class-name (intern (random-string) "CL-READ-MACRO-TOKENS")))
+	  (if (not (find-class class-name nil))
+	      (return class-name)))))
+
+(defmacro! set-macro-token-reader (token reader)
+  (let ((class (intern (concatenate 'string (package-name *package*) "-" (string token))
+		       "CL-READ-MACRO-TOKENS")))
+    `(progn (defclass ,class (tautological-read-macro-token) ())
+	    (defmethod read-handler :around ((obj ,class) stream token)
+	      (let ((the-token-instance obj))
+		;; (format t "In read handler: ~a ~a~%" the-token-instance the-token)
+		(funcall ,reader stream token)))
+	    (setf (gethash ',token *read-macro-tokens-classes*)
+		  ',class
+		  (gethash ',token *read-macro-tokens-instances*)
+		  (make-instance ',class
+				 :name ',token))
+	    (setf (gethash ',token *read-macro-tokens*)
+		  (lambda (stream token)
+		    (read-handler (gethash ',token *read-macro-tokens-instances*)
+				  stream token))))))
+
+
