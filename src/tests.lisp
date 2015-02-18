@@ -65,3 +65,19 @@
 ;; test to catch dot-context failure in Clozure
 (test simple-dot-operator
   (is (equal (cons 1 2) '(1 . 2))))
+
+
+(enable-read-macro-tokens)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (set-macro-token-reader first-string-to-nil (lambda (stream token)
+						(let ((expression (let ((it (read stream t nil t)))
+								    (if (not (stringp it))
+									it))))
+						  `(,cl-read-macro-tokens::the-token
+						    ,expression
+						    ,@(read-list-old stream token))))))
+
+(test set-macro-token-reader
+  (is (equal (list 'first-string-to-nil nil "a") '(first-string-to-nil "a" "a")))
+  (is (equal (list 'first-string-to-nil 'a "a") '(first-string-to-nil a "a"))))
