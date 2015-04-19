@@ -31,7 +31,7 @@
           ;; Originally I wanted them to be GENSYMs, but this seems to break
           ;; CLOS machinery somehow (it starts complaining about forward-referenced classes)
           (myclass (intern (string name) "CL-READ-MACRO-TOKENS")))
-      (format t "Compiling DEFMACRO!! name is ~a, tokens inside are ~a~%" name readmacro-tokens)
+      ;; (format t "Compiling DEFMACRO!! name is ~a, tokens inside are ~a~%" name readmacro-tokens)
       `(eval-when (:compile-toplevel :load-toplevel :execute)
          (defclass ,myclass ,readmacro-tokens ())
          (defmethod read-handler :around ((,e!-obj ,myclass) ,e!-stream ,e!-token)
