@@ -15,18 +15,22 @@
 (defun read-macro-token-p (symb)
   (gethash symb *read-macro-tokens*))
 
-(defparameter *read-macro-tokens-classes* (make-hash-table :test #'eq))
-(defparameter *read-macro-tokens-instances* (make-hash-table :test #'eq))
+(defvar *read-macro-tokens-classes* (make-hash-table :test #'eq))
+(defvar *read-macro-tokens-instances* (make-hash-table :test #'eq))
 
 (defmacro! defmacro!! (name args reader-init &body body)
   (multiple-value-bind (forms decls doc) (defmacro-enhance::parse-body body)
-    (let ((readmacro-tokens (or (remove-duplicates
-                                 (remove-if-not #'identity
-                                                (mapcar (lambda (x)
-                                                          (gethash x *read-macro-tokens-classes*))
-                                                        (remove-if-not #'read-macro-token-p
-                                                                       (alexandria:flatten forms)))))
-                                '(tautological-read-macro-token)))
+    (let ((readmacro-tokens (if (find 'force-tautological-reader (alexandria:flatten reader-init)
+				      :test (lambda (x y)
+					      (and (symbolp x) (symbolp y) (string= (string x) (string y)))))
+				'(tautological-read-macro-token)
+				(or (remove-duplicates
+				     (remove-if-not #'identity
+						    (mapcar (lambda (x)
+							      (gethash x *read-macro-tokens-classes*))
+							    (remove-if-not #'read-macro-token-p
+									   (alexandria:flatten forms)))))
+				    '(tautological-read-macro-token))))
           ;; All these under-the-hood classes names should be somewhere, right?
           ;; Originally I wanted them to be GENSYMs, but this seems to break
           ;; CLOS machinery somehow (it starts complaining about forward-referenced classes)
@@ -36,7 +40,11 @@
          (defclass ,myclass ,readmacro-tokens ())
          (defmethod read-handler :around ((,e!-obj ,myclass) ,e!-stream ,e!-token)
                     ;; Yes, this injection of OBJ, STREAM and TOKEN is intended
-                    ,(or reader-init '(call-next-method)))
+                    ,(if reader-init
+			 `(macrolet ((force-tautological-reader ()
+				       `(call-next-method)))
+			    ,reader-init)
+			 '(call-next-method)))
          (setf (gethash ',name *read-macro-tokens-classes*) ',myclass
                (gethash ',name *read-macro-tokens-instances*) (make-instance ',myclass
                                                                              :name ',name))
@@ -72,7 +80,7 @@
                             ,@body)
        (set-dispatch-macro-character ,char ,subchar ,g!-it))))
 
-(defparameter the-token-instance nil)
+(defvar the-token-instance nil)
 (define-symbol-macro the-token (slot-value the-token-instance 'name))
 
 (defun random-string ()
