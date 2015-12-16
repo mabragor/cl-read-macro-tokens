@@ -12,11 +12,12 @@
   :license "GPL"
   :version "0.3"
   :pathname "src/"
-  :depends-on (#:defmacro-enhance)
-  :components (#+sbcl (:file "sbcl-backend")
-               #+cmucl (:file "cmucl-backend")
-               #+ccl (:file "ccl-backend")
-               #-(or sbcl cmucl ccl)(:file "not-implemented")
+  :depends-on (#:defmacro-enhance #:com.informatimago.common-lisp.lisp-reader)
+  :components ((:file "com-informatimago-backend")
+	       ;;#+sbcl (:file "sbcl-backend")
+               ;; #+cmucl (:file "cmucl-backend")
+               ;; #+ccl (:file "ccl-backend")
+               ;; #-(or sbcl cmucl ccl)(:file "not-implemented")
                (:file "package")
                (:file "cl-read-macro-tokens")
                (:file "read-macro")))
